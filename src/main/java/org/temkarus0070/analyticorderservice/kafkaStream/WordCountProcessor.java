@@ -27,12 +27,7 @@ public class WordCountProcessor {
 
 
         KStream<OrderStatus,OrdersReport> ordersStream=messageStream
-                .groupBy((key,val)->{
-                    String s1=val.getStatus().name();
-                    String s2=val.getStatus().toString();
-                    OrderStatus status=OrderStatus.valueOf(val.getStatus().toString());
-                    return status;
-                })
+                .groupBy((key,val)-> OrderStatus.valueOf(val.getStatus().name()))
 
                 .aggregate((Initializer<HashMap<OrderStatus, OrdersReport>>) HashMap::new,(status, order, map)->{
                     map.merge(status,new OrdersReport(1,order.getGoods().stream().map(Good::getSum).reduce(0.0, Double::sum),order.getGoods().size()),(report1, report2)->{
