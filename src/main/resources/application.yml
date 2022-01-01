@@ -1,2 +1,33 @@
 server:
-  port: 8086
+  port: 9086
+management:
+    health:
+      binders:
+        enabled: false
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  kafka:
+    properties:
+      topic: stats
+      spring:
+        json:
+          value:
+            default:
+              type: org.temkarus0070.analyticorderservice.models.OrdersReport
+    consumer:
+      bootstrap-servers: localhost:9092
+      group-id: group-id
+      auto-offset-reset: latest
+      key-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+    streams:
+      bootstrap-servers: localhost:9092
+      properties:
+        default.key.serde:  org.springframework.kafka.support.serializer.JsonSerde
+        default.value.serde:   org.springframework.kafka.support.serializer.JsonSerde
+        spring.json.trusted.packages: "org.temkarus0070.analyticorderservice.models"
+      replication-factor: 1
+      application-id: analytic-app
+  application:
+    name:  app

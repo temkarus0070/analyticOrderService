@@ -1,12 +1,13 @@
 package org.temkarus0070.analyticorderservice;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
+import org.temkarus0070.analyticorderservice.models.OrderStatus;
+import org.temkarus0070.analyticorderservice.models.OrderStatusData;
+import org.temkarus0070.analyticorderservice.models.OrdersReport;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/analytics")
@@ -21,8 +22,8 @@ public class OrderAnalyticController {
 
     @GetMapping
     @ExceptionHandler(InvalidDatesAtRequestException.class)
-    public OrdersReport getAnalyticsByOrders(@RequestParam LocalDate periodBegin, @RequestParam LocalDate periodEnd, @RequestParam(required = false) Integer clientId, @RequestParam OrderStatus orderStatus){
-        return analyticsService.ordersReport(periodBegin,periodEnd,clientId,orderStatus);
+    public OrdersReport getAnalyticsByOrders(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime periodBegin, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime periodEnd, @RequestParam(required = false) String clientId, @RequestParam OrderStatus orderStatus){
+        return analyticsService.ordersReport(periodBegin,periodEnd,clientId, orderStatus);
     }
 
 
