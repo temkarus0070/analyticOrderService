@@ -2,25 +2,17 @@ package org.temkarus0070.analyticorderservice.kafkaStream;
 
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.*;
-import org.apache.kafka.streams.kstream.internals.WindowedSerializer;
-import org.apache.kafka.streams.state.KeyValueStore;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Bean;
-import org.springframework.kafka.annotation.EnableKafkaStreams;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerde;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.springframework.stereotype.Component;
 import org.temkarus0070.analyticorderservice.models.*;
 
-import java.time.Duration;
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.List;
 
 @Component
 public class OrdersStatProcessor {
@@ -28,57 +20,29 @@ public class OrdersStatProcessor {
 
     @Autowired
     public void process(final StreamsBuilder builder) {
+        Serde<OrderStatusData> orderStatusDataSerde=Serdes.serdeFrom(new JsonSerializer<>(),new JsonDeserializer<>(OrderStatusData.class));
+        Serde<OrdersReport> ordersReportSerde=Serdes.serdeFrom(new JsonSerializer<>(),new JsonDeserializer<>(OrdersReport.class));
         KStream<Long, Order> messageStream = builder
-                .stream("processOrders1", Consumed.with(Serdes.Long(), new JsonSerde<>(Order.class)).withTimestampExtractor(new MyTimeStampExtractor()));
-
-        Serde<Windowed<OrderStatusData>> windowSerde = Serdes.serdeFrom(new TimeWindowedSerializer<>(new JsonSerializer<>())
-                , new TimeWindowedDeserializer<>(new JsonDeserializer<>()));
-
-        Serde<OrdersReport> orderReportSerde = Serdes.serdeFrom(new JsonSerializer<>(), new JsonDeserializer<>());
-
-        final KTable<OrderStatusData, Long> ordersCount = messageStream
-                .groupBy((key, val) -> new OrderStatusData(OrderStatus.valueOf(val.getStatus().name()), val.getClientFIO()))
-                .count();
-
-        final KTable<OrderStatusData, Long> goodsCountByUsers = messageStream
-                .map((key, val) -> new KeyValue<OrderStatusData, Collection<Good>>(new OrderStatusData(OrderStatus.valueOf(val.getStatus().name()), val.getClientFIO()), val.getGoods()))
-                .groupBy((key, val) -> key)
-                .count();
-
-        ordersCount.join(goodsCountByUsers, new ValueJoiner<Long, Long, OrdersReport>() {
-            @Override
-            public OrdersReport apply(Long aLong, Long aLong2) {
-                return new OrdersReport(aLong,0,aLong2);
-            }
-        },);
-
-        final KStream<OrderStatusData, Long> goodsCountByAllUsers = messageStream
-                .map((key, val) -> new KeyValue<OrderStatusData, Collection<Good>>(new OrderStatusData(OrderStatus.valueOf(val.getStatus().name())), val.getGoods()))
-                .groupBy((key, val) -> key)
-                .count()
-                .toStream();
-
-        final KStream<OrderStatusData, Long> goodsCountByAllOrders = messageStream
-                .map((key, val) -> new KeyValue<OrderStatusData, Collection<Good>>(new OrderStatusData(OrderStatus.ALL), val.getGoods()))
-                .groupBy((key, val) -> key)
-                .count()
-                .toStream();
-
-        final KStream<OrderStatusData, Long> goodsCountByAllUserOrders = messageStream
-                .map((key, val) -> new KeyValue<OrderStatusData, Collection<Good>>(new OrderStatusData(OrderStatus.ALL, val.getClientFIO()), val.getGoods()))
-                .groupBy((key, val) -> key)
-                .count()
-                .toStream();
-
-
-        ;
+                .stream("processOrders1");
 
 
 
-        KStream<OrderStatusData, OrdersReport> ordersStats =
-                .toStream();
-        ordersStats.print(Printed.toSysOut());
-        ordersStats.to("ordersStats");
+        final KTable<OrderStatusData, OrdersReport> ordersStats = messageStream
+                .flatMap((key,val)-> {
+                    OrdersReport ordersReport = new OrdersReport(1, val.getGoods().stream().map(Good::getSum).reduce(0.0, Double::sum), val.getGoods().size());
+                    return List.of(new KeyValue<>(new OrderStatusData(OrderStatus.ALL), ordersReport), new KeyValue<>(new OrderStatusData(OrderStatus.ALL, val.getClientFIO()), ordersReport),
+                            new KeyValue<>(new OrderStatusData(OrderStatus.valueOf(val.getStatus().name())), ordersReport), new KeyValue<>(new OrderStatusData(OrderStatus.valueOf(val.getStatus().name()), val.getClientFIO()), ordersReport));
+                })
+                .groupByKey(Grouped.with(orderStatusDataSerde,ordersReportSerde))
+                .aggregate(OrdersReport::new,(status, report, report1)->{
+                    report.setRowsCount(report1.getRowsCount()+report.getRowsCount());
+                    report.setOrdersCount(report1.getOrdersCount()+report.getOrdersCount());
+                    report.setSum(report1.getSum()+report.getSum());
+                    return report;
+                },Materialized.with(orderStatusDataSerde,ordersReportSerde));
+                ordersStats.toStream().to("ordersStats");
+
+
 
 
 
@@ -113,39 +77,6 @@ public class OrdersStatProcessor {
 
     }
 
-    private KStream<OrderStatusData,Long> goodsCount(KStream<Long,Order> messageStream,OrderStatus orderStatus,String clientId){
-        return messageStream
-                .map((key, val) -> new KeyValue<OrderStatusData, Collection<Good>>(new OrderStatusData(orderStatus, clientId), val.getGoods()))
-                .groupBy((key, val) -> key)
-                .count()
-                .toStream();
-    }
 
-    private KStream<OrderStatusData,Long> ordersCount(KStream<Long,Order> messageStream,OrderStatus orderStatus,String clientId){
-        return messageStream
-                .groupBy((key, val) -> new OrderStatusData(orderStatus, clientId))
-                .count()
-                .toStream();
-    }
-
-
-    public Serde<OrderStatusData> orderStatusDataSerde() {
-        return new JsonSerde<>(OrderStatusData.class);
-    }
-
-
-    public Serde<HashMap<OrderStatusData, OrdersReport>> ordersReportSerde() {
-        return new JsonSerde<>(HashMap.class);
-    }
-
-
-    private void doMapMerge(HashMap<OrderStatusData, OrdersReport> map, OrderStatusData orderStatusData, Order order) {
-        map.merge(orderStatusData, new OrdersReport(1, order.getGoods().stream().map(Good::getSum).reduce(0.0, Double::sum), order.getGoods().size()), (report1, report2) -> {
-            report2.setRowsCount(report1.getRowsCount() + report2.getRowsCount());
-            report2.setOrdersCount(report1.getOrdersCount() + report2.getOrdersCount());
-            report2.setSum(report1.getSum() + report2.getSum());
-            return report2;
-        });
-    }
 }
 
