@@ -22,7 +22,7 @@ spring:
     streams:
       bootstrap-servers: localhost:9092
       properties:
-        default.key.serde:  org.apache.kafka.common.serialization.Serdes$LongSerde
+        default.key.serde:  org.apache.kafka.streams.kstream.WindowedSerdes$TimeWindowedSerde
         default.value.serde:   org.springframework.kafka.support.serializer.JsonSerde
         spring:
           json:
@@ -31,6 +31,9 @@ spring:
                   type: org.temkarus0070.analyticorderservice.models.OrderDTO
             trusted:
               packages: org.temkarus0070.analyticorderservice.models
+        windowed.inner.class.serde: org.temkarus0070.analyticorderservice.kafkaStream.OrderStatusDataSerde
+        window:
+          size.ms: 60000
 
       replication-factor: 1
       application-id: analytic-app

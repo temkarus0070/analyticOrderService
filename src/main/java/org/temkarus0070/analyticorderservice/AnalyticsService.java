@@ -33,11 +33,8 @@ public class AnalyticsService {
         KafkaStreams kafkaStreams=streamsBuilderFactoryBean.getKafkaStreams();
 
         OrderStatusData orderStatusData=new OrderStatusData(orderStatus,clientId);
-
-        final ReadOnlyKeyValueStore<OrderStatusData,OrdersReport> ordersStats = kafkaStreams.store(StoreQueryParameters.fromNameAndType("ordersStats", QueryableStoreTypes.keyValueStore()));
-        ordersStats.all().forEachRemaining(System.out::println);
-        final OrdersReport report = ordersStats.get(new OrderStatusData(orderStatus, clientId));
-
+        final ReadOnlyKeyValueStore<OrderStatusData, ValueAndTimestamp<OrdersReport>> readyStats = kafkaStreams.store(StoreQueryParameters.fromNameAndType("readyStats", QueryableStoreTypes.timestampedKeyValueStore()));
+        readyStats.all().forEachRemaining(System.out::println);
 /*        ReadOnlyKeyValueStore<OrderStatusData,OrdersReport> ordersStats = kafkaStreams.store(StoreQueryParameters.fromNameAndType("ordersStats",
                 QueryableStoreTypes.keyValueStore()));
         long n = ordersStats.approximateNumEntries();
