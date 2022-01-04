@@ -2,12 +2,16 @@ package org.temkarus0070.analyticorderservice.kafkaStream;
 
 import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.Serializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerde;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.temkarus0070.analyticorderservice.models.OrderStatusData;
 import org.temkarus0070.analyticorderservice.models.OrdersReport;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class OrderStatusDataSerde extends JsonSerde<OrderStatusData> {
     @Override
@@ -24,7 +28,11 @@ public class OrderStatusDataSerde extends JsonSerde<OrderStatusData> {
     public Deserializer<OrderStatusData> deserializer() {
          JsonDeserializer<OrderStatusData> jsonDeserializer = new JsonDeserializer<>();
 
-        jsonDeserializer.addTrustedPackages("org.temkarus0070.analyticorderservice.models");
+        Map<String, Object> config = new HashMap<>();
+        config.put(JsonDeserializer.KEY_DEFAULT_TYPE, OrderStatusData.class);
+
+        config.put(JsonDeserializer.TRUSTED_PACKAGES,"org.temkarus0070.analyticorderservice.models");
+        jsonDeserializer.configure(config,true);
         return jsonDeserializer;
     }
 

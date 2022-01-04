@@ -8,6 +8,9 @@ import org.springframework.kafka.support.serializer.JsonSerde;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.temkarus0070.analyticorderservice.models.OrdersReport;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class OrderReportSerde extends JsonSerde<OrdersReport> {
     @Override
     public Serializer<OrdersReport> serializer() {
@@ -22,8 +25,11 @@ public class OrderReportSerde extends JsonSerde<OrdersReport> {
     @Override
     public Deserializer<OrdersReport> deserializer() {
         final JsonDeserializer<OrdersReport> jsonDeserializer = new JsonDeserializer<>();
-        jsonDeserializer.getTypeMapper().fromClass(OrdersReport.class,new RecordHeaders());
-        jsonDeserializer.addTrustedPackages("org.temkarus0070.analyticorderservice.models");
+        Map<String, Object> config = new HashMap<>();
+
+        config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, OrdersReport.class);
+        config.put(JsonDeserializer.TRUSTED_PACKAGES,"org.temkarus0070.analyticorderservice.models");
+        jsonDeserializer.configure(config,true);
         return jsonDeserializer;
     }
 }

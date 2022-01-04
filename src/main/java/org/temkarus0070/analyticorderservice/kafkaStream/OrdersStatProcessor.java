@@ -20,8 +20,8 @@ public class OrdersStatProcessor {
 
     @Autowired
     public void process(final StreamsBuilder builder) {
-        Serde<OrderStatusData> orderStatusDataSerde=Serdes.serdeFrom(new JsonSerializer<>(),new JsonDeserializer<>(OrderStatusData.class));
-        Serde<OrdersReport> ordersReportSerde=Serdes.serdeFrom(new JsonSerializer<>(),new JsonDeserializer<>(OrdersReport.class));
+        Serde<OrderStatusData> orderStatusDataSerde=new OrderStatusDataSerde();
+        Serde<OrdersReport> ordersReportSerde=new OrderReportSerde();
         KStream<Long, Order> messageStream = builder
                 .stream("processOrders1");
 

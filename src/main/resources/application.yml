@@ -24,15 +24,15 @@ spring:
     streams:
       bootstrap-servers: localhost:9092
       properties:
-        default.key.serde:  org.springframework.kafka.support.serializer.JsonSerde
+        default.key.serde:  org.apache.kafka.common.serialization.Serdes$LongSerde
         default.value.serde:   org.springframework.kafka.support.serializer.JsonSerde
         spring:
           json:
             value:
                 default:
-                  type: "org.temkarus0070.analyticorderservice.models.Order"
+                  type: org.temkarus0070.analyticorderservice.models.Order
             trusted:
-              packages: "org.temkarus0070.analyticorderservice.models"
+              packages: org.temkarus0070.analyticorderservice.models
 
       replication-factor: 1
       application-id: analytic-app
