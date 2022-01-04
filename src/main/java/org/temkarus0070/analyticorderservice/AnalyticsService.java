@@ -1,23 +1,18 @@
 package org.temkarus0070.analyticorderservice;
 
 import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StoreQueryParameters;
 import org.apache.kafka.streams.state.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 import org.springframework.stereotype.Service;
-import org.temkarus0070.analyticorderservice.models.Order;
 import org.temkarus0070.analyticorderservice.models.OrderStatus;
 import org.temkarus0070.analyticorderservice.models.OrderStatusData;
 import org.temkarus0070.analyticorderservice.models.OrdersReport;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Service
 public class AnalyticsService {

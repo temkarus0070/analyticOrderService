@@ -5,8 +5,6 @@ management:
       binders:
         enabled: false
 spring:
-  main:
-    allow-bean-definition-overriding: true
   kafka:
     properties:
       topic: stats
@@ -14,7 +12,7 @@ spring:
         json:
           value:
             default:
-              type: org.temkarus0070.analyticorderservice.models.OrdersReport
+              type: org.temkarus0070.analyticorderservice.models.OrderDTO
     consumer:
       bootstrap-servers: localhost:9092
       group-id: group-id
@@ -30,7 +28,7 @@ spring:
           json:
             value:
                 default:
-                  type: org.temkarus0070.analyticorderservice.models.Order
+                  type: org.temkarus0070.analyticorderservice.models.OrderDTO
             trusted:
               packages: org.temkarus0070.analyticorderservice.models
 

@@ -1,14 +1,11 @@
 package org.temkarus0070.analyticorderservice.kafkaStream;
 
-import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerde;
-import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.springframework.stereotype.Component;
 import org.temkarus0070.analyticorderservice.models.*;
 
@@ -20,20 +17,25 @@ public class OrdersStatProcessor {
 
     @Autowired
     public void process(final StreamsBuilder builder) {
-        Serde<OrderStatusData> orderStatusDataSerde=new OrderStatusDataSerde();
-        Serde<OrdersReport> ordersReportSerde=new OrderReportSerde();
-        KStream<Long, Order> messageStream = builder
-                .stream("processOrders1");
+        JsonSerde<OrderStatusData> orderStatusDataSerde=new OrderStatusDataSerde();
+        JsonSerde<OrdersReport> ordersReportSerde=new OrderReportSerde();
+        ordersReportSerde=ordersReportSerde.copyWithType(OrdersReport.class);
+        KStream<Long, OrderDTO> messageStream = builder
+                .stream("ordersToAnalyze");
 
 
 
-        final KTable<OrderStatusData, OrdersReport> ordersStats = messageStream
+
+
+
+       final KTable<OrderStatusData, OrdersReport> ordersStats = messageStream
                 .flatMap((key,val)-> {
-                    OrdersReport ordersReport = new OrdersReport(1, val.getGoods().stream().map(Good::getSum).reduce(0.0, Double::sum), val.getGoods().size());
+                    OrdersReport ordersReport = new OrdersReport(1, val.getGoods().stream().map(GoodDTO::getSum).reduce(0.0, Double::sum), val.getGoods().size());
                     return List.of(new KeyValue<>(new OrderStatusData(OrderStatus.ALL), ordersReport), new KeyValue<>(new OrderStatusData(OrderStatus.ALL, val.getClientFIO()), ordersReport),
                             new KeyValue<>(new OrderStatusData(OrderStatus.valueOf(val.getStatus().name())), ordersReport), new KeyValue<>(new OrderStatusData(OrderStatus.valueOf(val.getStatus().name()), val.getClientFIO()), ordersReport));
                 })
-                .groupByKey(Grouped.with(orderStatusDataSerde,ordersReportSerde))
+                .groupBy((orderStatusData, ordersReport) -> orderStatusData
+    ,Grouped.with(orderStatusDataSerde,ordersReportSerde))
                 .aggregate(OrdersReport::new,(status, report, report1)->{
                     report.setRowsCount(report1.getRowsCount()+report.getRowsCount());
                     report.setOrdersCount(report1.getOrdersCount()+report.getOrdersCount());
