@@ -27,7 +27,7 @@ public class OrderReportSerde extends JsonSerde<OrdersReport> {
         final JsonDeserializer<OrdersReport> jsonDeserializer = new JsonDeserializer<>();
         Map<String, Object> config = new HashMap<>();
 
-        config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, OrdersReport.class);
+        config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, OrdersReport.class.getName());
         config.put(JsonDeserializer.TRUSTED_PACKAGES,"org.temkarus0070.analyticorderservice.models");
         jsonDeserializer.configure(config,true);
         return jsonDeserializer;
