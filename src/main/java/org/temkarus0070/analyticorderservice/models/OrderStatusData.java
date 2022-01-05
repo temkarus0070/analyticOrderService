@@ -14,7 +14,17 @@ public class OrderStatusData implements Serializable {
     private OrderStatus status;
     private String clientFIO;
 
+    @Override
+    public String toString() {
+        return "OrderStatusData{" +
+                "status=" + status +
+                ", clientFIO='" + clientFIO + '\'' +
+                '}';
+    }
+
     public OrderStatusData(OrderStatus status, String clientFIO) {
+        if (clientFIO==null)
+            clientFIO="";
         this.status = status;
         this.clientFIO = clientFIO;
     }

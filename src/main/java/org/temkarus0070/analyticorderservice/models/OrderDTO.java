@@ -28,6 +28,16 @@ class OrderDTO implements Serializable {
         return Objects.equals(orderNum, orderDTO.orderNum) && Objects.equals(clientFIO, orderDTO.clientFIO) && Objects.equals(goodDTOS, orderDTO.goodDTOS) && status == orderDTO.status;
     }
 
+    @Override
+    public String toString() {
+        return "OrderDTO{" +
+                "orderNum=" + orderNum +
+                ", clientFIO='" + clientFIO + '\'' +
+                ", goodDTOS=" + goodDTOS +
+                ", status=" + status +
+                '}';
+    }
+
     public OrderDTO() {
     }
 

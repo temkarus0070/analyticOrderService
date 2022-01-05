@@ -18,6 +18,17 @@ class GoodDTO implements Serializable {
     private int count;
 
 
+    @Override
+    public String toString() {
+        return "GoodDTO{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", price=" + price +
+                ", count=" + count +
+                ", sum=" + sum +
+                '}';
+    }
+
     private double sum;
 
     public GoodDTO(long id, String name, double price, int count, double sum) {

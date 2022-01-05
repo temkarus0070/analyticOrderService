@@ -10,9 +10,7 @@ import org.temkarus0070.analyticorderservice.models.OrderStatus;
 import org.temkarus0070.analyticorderservice.models.OrderStatusData;
 import org.temkarus0070.analyticorderservice.models.OrdersReport;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 
 @Service
 public class AnalyticsService {
@@ -29,38 +27,23 @@ public class AnalyticsService {
                 throw new InvalidDatesAtRequestException();
             }
         ZonedDateTime beginZT=ZonedDateTime.of(begin,ZoneId.systemDefault());
-        ZonedDateTime endZT=ZonedDateTime.of(begin,ZoneId.systemDefault());
+        ZonedDateTime endZT=ZonedDateTime.of(end,ZoneId.systemDefault());
         KafkaStreams kafkaStreams=streamsBuilderFactoryBean.getKafkaStreams();
-
-        OrderStatusData orderStatusData=new OrderStatusData(orderStatus,clientId);
-        final ReadOnlyKeyValueStore<OrderStatusData, ValueAndTimestamp<OrdersReport>> readyStats = kafkaStreams.store(StoreQueryParameters.fromNameAndType("readyStats", QueryableStoreTypes.timestampedKeyValueStore()));
-        readyStats.all().forEachRemaining(System.out::println);
-/*        ReadOnlyKeyValueStore<OrderStatusData,OrdersReport> ordersStats = kafkaStreams.store(StoreQueryParameters.fromNameAndType("ordersStats",
-                QueryableStoreTypes.keyValueStore()));
-        long n = ordersStats.approximateNumEntries();
-        ordersStats.all().forEachRemaining(
-               e-> System.out.println(e)
-        );*/
-/*        ReadOnlyWindowStore<Object, ValueAndTimestamp<Object>> ordersStats1 = kafkaStreams.store(StoreQueryParameters.fromNameAndType(
-                "ordersStats",
-                QueryableStoreTypes.windowStore()));
-
-
-
-
-
- /*       KeyValueIterator<Object, ValueAndTimestamp<Object>> iterator = ordersStats.all();
-        while (iterator.hasNext()) {
-            KeyValue<Object, ValueAndTimestamp<Object>> value = iterator.next();
-
-        }*/
-     //   ordersStats.fetch(orderStatusData, Instant.from(beginZT),Instant.from(endZT));
         final OrdersReport ordersReport=new OrdersReport();
-/*        windowStore.fetch(orderStatusData, Instant.from(beginZT),Instant.from(endZT)).forEachRemaining((val)->{
-            ordersReport.setSum(ordersReport.getSum()+val.value.getSum());
-            ordersReport.setOrdersCount(ordersReport.getOrdersCount()+val.value.getOrdersCount());
-            ordersReport.setRowsCount(ordersReport.getRowsCount()+val.value.getOrdersCount());
-        });*/
+        OrderStatusData orderStatusData=new OrderStatusData(orderStatus,clientId);
+        final ReadOnlyWindowStore<OrderStatusData, ValueAndTimestamp<OrdersReport>> readyStats = kafkaStreams.store(StoreQueryParameters.fromNameAndType("readyStats", QueryableStoreTypes.timestampedWindowStore()));
+        //  final ReadOnlyKeyValueStore<OrderStatusData, ValueAndTimestamp<OrdersReport>> readyStats = kafkaStreams.store(StoreQueryParameters.fromNameAndType("readyStats", QueryableStoreTypes.timestampedWindowStore().timestampedKeyValueStore()));
+        readyStats.all().forEachRemaining(val->{
+            System.out.printf("%s %s %s%n",Instant.ofEpochMilli(val.value.timestamp())
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime(),val.key,val.value);
+        });
+        final WindowStoreIterator<ValueAndTimestamp<OrdersReport>> fetch = readyStats.fetch(orderStatusData, Instant.from(beginZT), Instant.from(endZT));
+        fetch.forEachRemaining((val)->{
+            ordersReport.setSum(ordersReport.getSum()+val.value.value().getSum());
+            ordersReport.setOrdersCount(ordersReport.getOrdersCount()+val.value.value().getOrdersCount());
+            ordersReport.setRowsCount(ordersReport.getRowsCount()+val.value.value().getOrdersCount());
+        });
         return ordersReport;
 
     }

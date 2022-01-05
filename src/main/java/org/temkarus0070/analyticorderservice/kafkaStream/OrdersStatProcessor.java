@@ -6,6 +6,7 @@ import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.*;
 import org.apache.kafka.streams.state.KeyValueStore;
+import org.apache.kafka.streams.state.WindowStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.support.serializer.JsonSerde;
 import org.springframework.stereotype.Component;
@@ -59,14 +60,14 @@ public class OrdersStatProcessor {
                 })
                 .groupBy((orderStatusData, ordersReport) -> orderStatusData, Grouped.with(orderStatusDataSerde, ordersReportSerde))
                 .windowedBy(SlidingWindows.ofTimeDifferenceAndGrace(Duration.ofMinutes(1), Duration.ofSeconds(30)))
+
                 .aggregate(OrdersReport::new, (status, report, report1) -> {
                     report.setRowsCount(report1.getRowsCount() + report.getRowsCount());
                     report.setOrdersCount(report1.getOrdersCount() + report.getOrdersCount());
                     report.setSum(report1.getSum() + report.getSum());
                     return report;
 
-                }, Materialized.with(orderStatusDataSerde, ordersReportSerde))
-                .mapValues((key, val) -> val, as("readyStats"));
+                }, Materialized.<OrderStatusData, OrdersReport, WindowStore<Bytes, byte[]>>as("readyStats").withValueSerde(ordersReportSerde).withKeySerde(orderStatusDataSerde).withRetention(Duration.ofMinutes(5L)));
 
         readyOrders.toStream().to("ordersStats");
 
