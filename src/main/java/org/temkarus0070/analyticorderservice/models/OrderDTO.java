@@ -17,6 +17,7 @@ class OrderDTO implements Serializable {
         this.orderNum = orderNum;
         this.clientFIO = clientFIO;
         this.goodDTOS = goodDTOS;
+        this.status = status;
 
     }
 
