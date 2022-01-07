@@ -34,6 +34,7 @@ public class AnalyticsService {
         }
         ZonedDateTime beginZT = ZonedDateTime.of(begin, ZoneId.systemDefault());
         ZonedDateTime endZT = ZonedDateTime.of(end, ZoneId.systemDefault());
+
         KafkaStreams kafkaStreams = streamsBuilderFactoryBean.getKafkaStreams();
         final OrdersReport ordersReport = new OrdersReport();
         OrderStatusData orderStatusData = new OrderStatusData(orderStatus, clientId);

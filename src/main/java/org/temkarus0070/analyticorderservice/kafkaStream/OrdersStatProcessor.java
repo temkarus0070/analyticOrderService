@@ -44,7 +44,7 @@ public class OrdersStatProcessor {
                             new KeyValue<>(new OrderStatusData(OrderStatus.valueOf(val.getStatus().name()), val.getClientFIO()), ordersReport));
                 })
                 .groupBy((orderStatusData, ordersReport) -> orderStatusData, Grouped.with(orderStatusDataSerde, ordersReportSerde))
-                .windowedBy(SlidingWindows.withTimeDifferenceAndGrace(Duration.ofMinutes(1), Duration.ofSeconds(30)))
+                .windowedBy(SlidingWindows.withTimeDifferenceAndGrace(Duration.ofMinutes(1), Duration.ofSeconds(5)))
                 .reduce((ordersReport, v1) -> {
                     ordersReport.setOrdersCount(v1.getOrdersCount() + ordersReport.getOrdersCount());
                     ordersReport.setRowsCount(v1.getRowsCount() + ordersReport.getRowsCount());
