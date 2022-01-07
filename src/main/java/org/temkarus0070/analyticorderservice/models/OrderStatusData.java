@@ -17,10 +17,12 @@ public class OrderStatusData implements Serializable {
     }
 
     public OrderStatusData(OrderStatus status, String clientFIO) {
-        if (clientFIO==null)
-            clientFIO="";
+        if (clientFIO == null)
+            this.clientFIO = "";
+        else
+            this.clientFIO = clientFIO;
         this.status = status;
-        this.clientFIO = clientFIO;
+
     }
 
     public OrderStatus getStatus() {
@@ -30,10 +32,12 @@ public class OrderStatusData implements Serializable {
     public String getClientFIO() {
         return clientFIO;
     }
+
     public OrderStatusData(OrderStatus status) {
         this.status = status;
-        this.clientFIO="";
+        this.clientFIO = "";
     }
+
     public OrderStatusData() {
     }
 
@@ -44,6 +48,7 @@ public class OrderStatusData implements Serializable {
         OrderStatusData that = (OrderStatusData) o;
         return status == that.status && Objects.equals(clientFIO, that.clientFIO);
     }
+
     @Override
     public int hashCode() {
         int n = Objects.hash(status, clientFIO);
