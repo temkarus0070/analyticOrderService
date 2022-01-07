@@ -1,11 +1,5 @@
 package org.temkarus0070.analyticorderservice.models;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.temkarus0070.analyticorderservice.models.Status;
-
 import java.io.Serializable;
 import java.util.Objects;
 

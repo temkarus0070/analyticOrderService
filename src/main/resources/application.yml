@@ -22,16 +22,18 @@ spring:
     streams:
       bootstrap-servers: localhost:9092
       properties:
-        default.key.serde:  org.apache.kafka.streams.kstream.WindowedSerdes$TimeWindowedSerde
-        default.value.serde:   org.springframework.kafka.support.serializer.JsonSerde
+        default:
+          key.serde: org.apache.kafka.streams.kstream.WindowedSerdes$TimeWindowedSerde
+          value.serde: org.springframework.kafka.support.serializer.JsonSerde
+          windowed.key.serde.inner: org.temkarus0070.analyticorderservice.kafkaStream.OrderStatusDataSerde
         spring:
           json:
             value:
-                default:
-                  type: org.temkarus0070.analyticorderservice.models.OrderDTO
+              default:
+                type: org.temkarus0070.analyticorderservice.models.OrderDTO
             trusted:
               packages: org.temkarus0070.analyticorderservice.models
-        windowed.inner.class.serde: org.temkarus0070.analyticorderservice.kafkaStream.OrderStatusDataSerde
+
         window:
           size.ms: 60000
 

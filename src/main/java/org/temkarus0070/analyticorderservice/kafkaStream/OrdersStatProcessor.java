@@ -38,11 +38,12 @@ public class OrdersStatProcessor {
         final KTable<Windowed<OrderStatusData>, OrdersReport> readyOrders = messageStream
                 .flatMap((key, val) -> {
                     OrdersReport ordersReport = new OrdersReport(1, val.getGoods().stream().map(GoodDTO::getSum).reduce(0.0, Double::sum), val.getGoods().size());
-                    return List.of(new KeyValue<>(new OrderStatusData(OrderStatus.ALL), ordersReport), new KeyValue<>(new OrderStatusData(OrderStatus.ALL, val.getClientFIO()), ordersReport),
-                            new KeyValue<>(new OrderStatusData(OrderStatus.valueOf(val.getStatus().name())), ordersReport), new KeyValue<>(new OrderStatusData(OrderStatus.valueOf(val.getStatus().name()), val.getClientFIO()), ordersReport));
+                    return List.of(
+                            new KeyValue<>(new OrderStatusData(OrderStatus.valueOf(val.getStatus().name())), ordersReport),
+                            new KeyValue<>(new OrderStatusData(OrderStatus.valueOf(val.getStatus().name()), val.getClientFIO()), ordersReport));
                 })
                 .groupBy((orderStatusData, ordersReport) -> orderStatusData, Grouped.with(orderStatusDataSerde, ordersReportSerde))
-                .windowedBy(SlidingWindows.withTimeDifferenceAndGrace(Duration.ofMinutes(1), Duration.ZERO))
+                .windowedBy(SlidingWindows.withTimeDifferenceAndGrace(Duration.ofMinutes(1), Duration.ofSeconds(30)))
 
                 .aggregate(OrdersReport::new, (status, report, report1) -> {
                     report.setRowsCount(report1.getRowsCount() + report.getRowsCount());
