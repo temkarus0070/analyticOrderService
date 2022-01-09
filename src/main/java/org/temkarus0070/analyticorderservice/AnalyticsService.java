@@ -38,7 +38,8 @@ public class AnalyticsService {
         KafkaStreams kafkaStreams = streamsBuilderFactoryBean.getKafkaStreams();
         final OrdersReport ordersReport = new OrdersReport();
         OrderStatusData orderStatusData = new OrderStatusData(orderStatus, clientId);
-        final ReadOnlyWindowStore<OrderStatusData, ValueAndTimestamp<OrdersReport>> readyStats = kafkaStreams.store(StoreQueryParameters.fromNameAndType("readyStats", QueryableStoreTypes.timestampedWindowStore()));
+        final ReadOnlyWindowStore<OrderStatusData, ValueAndTimestamp<OrdersReport>> readyStats = kafkaStreams.store(StoreQueryParameters.fromNameAndType("readyStats",
+                QueryableStoreTypes.<OrderStatusData, OrdersReport>timestampedWindowStore()));
         WindowStoreIterator<ValueAndTimestamp<OrdersReport>> fetch = readyStats.fetch(orderStatusData, Instant.from(beginZT), Instant.from(endZT));
         fetch.forEachRemaining((val) -> {
             ordersReport.setSum(ordersReport.getSum() + val.value.value().getSum());

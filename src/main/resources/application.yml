@@ -1,5 +1,8 @@
 server:
   port: 9086
+project:
+  title: kafka analytic app
+  description: kafka analytic app for orders
 management:
     health:
       binders:
