@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class OrdersStatProcessor {
+public class OrdersStatsProcessor {
 
 
     @Autowired

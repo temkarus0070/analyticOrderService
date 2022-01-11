@@ -19,7 +19,7 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.temkarus0070.analyticorderservice.AnalyticsService;
-import org.temkarus0070.analyticorderservice.kafkaStream.OrdersStatProcessor;
+import org.temkarus0070.analyticorderservice.kafkaStream.OrdersStatsProcessor;
 import org.temkarus0070.analyticorderservice.models.OrderStatus;
 import org.temkarus0070.analyticorderservice.models.OrderStatusData;
 import org.temkarus0070.analyticorderservice.models.OrdersReport;
@@ -45,7 +45,7 @@ public class AnalyticsServiceTest {
     @Mock
     private StreamsBuilderFactoryBean streamsBuilderFactoryBean;
     @Mock
-    private OrdersStatProcessor ordersStatProcessor;
+    private OrdersStatsProcessor ordersStatsProcessor;
     @Mock
     private KafkaStreams kafkaStreams;
 

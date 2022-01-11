@@ -18,7 +18,7 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.temkarus0070.analyticorderservice.kafkaStream.OrdersStatProcessor;
+import org.temkarus0070.analyticorderservice.kafkaStream.OrdersStatsProcessor;
 import org.temkarus0070.analyticorderservice.models.*;
 
 import java.time.Instant;
@@ -33,11 +33,11 @@ import java.util.List;
 @EmbeddedKafka(
         bootstrapServersProperty = "spring.kafka.bootstrap-servers", partitions = 1)
 public class KafkaTest {
-    private OrdersStatProcessor ordersStatProcessor;
+    private OrdersStatsProcessor ordersStatsProcessor;
 
     @Autowired
-    public void setOrdersStatProcessor(OrdersStatProcessor ordersStatProcessor) {
-        this.ordersStatProcessor = ordersStatProcessor;
+    public void setOrdersStatProcessor(OrdersStatsProcessor ordersStatsProcessor) {
+        this.ordersStatsProcessor = ordersStatsProcessor;
     }
 
     @Test
@@ -48,7 +48,7 @@ public class KafkaTest {
         OrderDTO orderDTO1 = new OrderDTO(2L, "Pupkin", goodDTOS, Status.CANCELLED);
 
         StreamsBuilder streamsBuilder = new StreamsBuilder();
-        ordersStatProcessor.process(streamsBuilder);
+        ordersStatsProcessor.process(streamsBuilder);
         Topology topology = streamsBuilder.build();
 
         try (TopologyTestDriver topologyTestDriver = new TopologyTestDriver(topology)) {
@@ -86,7 +86,7 @@ public class KafkaTest {
         OrderDTO orderDTO1 = new OrderDTO(2L, "Pupkin", goodDTOS, Status.CANCELLED);
 
         StreamsBuilder streamsBuilder = new StreamsBuilder();
-        ordersStatProcessor.process(streamsBuilder);
+        ordersStatsProcessor.process(streamsBuilder);
         Topology topology = streamsBuilder.build();
 
         try (TopologyTestDriver topologyTestDriver = new TopologyTestDriver(topology)) {

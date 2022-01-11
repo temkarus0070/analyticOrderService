@@ -4,8 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
-public
-class OrderDTO implements Serializable {
+public class OrderDTO implements Serializable {
     private Long orderNum;
 
     private String clientFIO;

@@ -1,12 +1,9 @@
 package org.temkarus0070.analyticorderservice.models;
 
-import lombok.Data;
-
 import java.io.Serializable;
 
 
-public
-class GoodDTO implements Serializable {
+public class GoodDTO implements Serializable {
     private long id;
 
 

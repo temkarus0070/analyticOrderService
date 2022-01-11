@@ -30,7 +30,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.temkarus0070.analyticorderservice.AnalyticsService;
 import org.temkarus0070.analyticorderservice.OrderAnalyticController;
-import org.temkarus0070.analyticorderservice.kafkaStream.OrdersStatProcessor;
+import org.temkarus0070.analyticorderservice.kafkaStream.OrdersStatsProcessor;
 import org.temkarus0070.analyticorderservice.models.OrderStatus;
 import org.temkarus0070.analyticorderservice.models.OrderStatusData;
 import org.temkarus0070.analyticorderservice.models.OrdersReport;
@@ -43,7 +43,7 @@ import static org.mockito.ArgumentMatchers.any;
 
 @SpringBootTest("spring.autoconfigure.exclude={org.springframework.kafka.annotation.KafkaStreamsDefaultConfiguration.class,org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration}")
 @ExtendWith(SpringExtension.class)
-@DirtiesContext
+@DirtiesContext()
 @EmbeddedKafka(
         bootstrapServersProperty = "spring.kafka.bootstrap-servers", partitions = 1, brokerProperties = {"listeners=PLAINTEXT://localhost:9092", "port=9092"})
 @AutoConfigureMockMvc
@@ -56,7 +56,7 @@ public class ControllerTest {
     @Mock
     private StreamsBuilderFactoryBean streamsBuilderFactoryBean;
     @Mock
-    private OrdersStatProcessor ordersStatProcessor;
+    private OrdersStatsProcessor ordersStatsProcessor;
     @Mock
     private KafkaStreams kafkaStreams;
     @MockBean
@@ -66,7 +66,7 @@ public class ControllerTest {
     private OrderAnalyticController orderAnalyticController;
 
     @BeforeEach
-    void init() {
+    public void init() {
 
         windowStoreIterator = new WindowStoreIterator<>() {
 
