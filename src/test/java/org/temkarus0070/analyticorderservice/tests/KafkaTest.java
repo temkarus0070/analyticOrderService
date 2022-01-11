@@ -1,4 +1,4 @@
-package org.temkarus0070.analyticorderservice;
+package org.temkarus0070.analyticorderservice.tests;
 
 
 import org.apache.kafka.common.serialization.LongSerializer;
@@ -16,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.temkarus0070.analyticorderservice.kafkaStream.OrdersStatProcessor;
 import org.temkarus0070.analyticorderservice.models.*;
@@ -28,6 +29,7 @@ import java.util.List;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
+@DirtiesContext
 @EmbeddedKafka(
         bootstrapServersProperty = "spring.kafka.bootstrap-servers", partitions = 1)
 public class KafkaTest {
