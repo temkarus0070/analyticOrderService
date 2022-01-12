@@ -3,7 +3,6 @@ package org.temkarus0070.analyticorderservice.models;
 import java.io.Serializable;
 import java.util.Objects;
 
-
 public class OrderStatusData implements Serializable {
     private OrderStatus status;
     private String clientFIO;
@@ -22,7 +21,6 @@ public class OrderStatusData implements Serializable {
         else
             this.clientFIO = clientFIO;
         this.status = status;
-
     }
 
     public OrderStatus getStatus() {
@@ -54,6 +52,4 @@ public class OrderStatusData implements Serializable {
         int n = Objects.hash(status, clientFIO);
         return Objects.hash(status, clientFIO);
     }
-
-
 }

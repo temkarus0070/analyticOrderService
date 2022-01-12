@@ -7,6 +7,4 @@ public enum OrderStatus implements Serializable {
     PENDING,
     PURCHASED,
     CANCELLED
-
-
 }

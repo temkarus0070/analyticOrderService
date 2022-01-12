@@ -6,13 +6,11 @@ import java.util.Objects;
 
 public class OrderDTO implements Serializable {
     private Long orderNum;
-
     private String clientFIO;
-
-
     private List<GoodDTO> goodDTOS;
+    private OrderStatus status;
 
-    public OrderDTO(Long orderNum, String clientFIO, List<GoodDTO> goodDTOS, Status status) {
+    public OrderDTO(Long orderNum, String clientFIO, List<GoodDTO> goodDTOS, OrderStatus status) {
         this.orderNum = orderNum;
         this.clientFIO = clientFIO;
         this.goodDTOS = goodDTOS;
@@ -70,14 +68,11 @@ public class OrderDTO implements Serializable {
         this.goodDTOS = goodDTOS;
     }
 
-    public Status getStatus() {
+    public OrderStatus getStatus() {
         return status;
     }
 
-    public void setStatus(Status status) {
+    public void setStatus(OrderStatus status) {
         this.status = status;
     }
-
-    private Status status;
-
 }

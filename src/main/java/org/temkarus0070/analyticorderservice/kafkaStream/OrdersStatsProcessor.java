@@ -19,8 +19,6 @@ import java.util.Map;
 
 @Component
 public class OrdersStatsProcessor {
-
-
     @Autowired
     public void process(final StreamsBuilder builder) {
         Map<String, Object> config = new HashMap<>();
@@ -40,8 +38,8 @@ public class OrdersStatsProcessor {
                     OrdersReport ordersReport = new OrdersReport(1, val.getGoods().stream().map(GoodDTO::getSum).reduce(0.0, Double::sum), val.getGoods().size());
                     return List.of(new KeyValue<>(new OrderStatusData(OrderStatus.ALL), ordersReport),
                             new KeyValue<>(new OrderStatusData(OrderStatus.ALL, val.getClientFIO()), ordersReport),
-                            new KeyValue<>(new OrderStatusData(OrderStatus.valueOf(val.getStatus().name())), ordersReport),
-                            new KeyValue<>(new OrderStatusData(OrderStatus.valueOf(val.getStatus().name()), val.getClientFIO()), ordersReport));
+                            new KeyValue<>(new OrderStatusData(val.getStatus()), ordersReport),
+                            new KeyValue<>(new OrderStatusData(val.getStatus(), val.getClientFIO()), ordersReport));
                 })
                 .groupBy((orderStatusData, ordersReport) -> orderStatusData, Grouped.with(orderStatusDataSerde, ordersReportSerde))
                 .windowedBy(SlidingWindows.withTimeDifferenceAndGrace(Duration.ofMinutes(1), Duration.ofSeconds(5)))
@@ -50,13 +48,12 @@ public class OrdersStatsProcessor {
                     ordersReport.setRowsCount(v1.getRowsCount() + ordersReport.getRowsCount());
                     ordersReport.setSum(v1.getSum() + ordersReport.getSum());
                     return ordersReport;
-                }, Materialized.<OrderStatusData, OrdersReport, WindowStore<Bytes, byte[]>>as("readyStats").withValueSerde(ordersReportSerde).withKeySerde(orderStatusDataSerde).withRetention(Duration.ofMinutes(5L)));
-
+                }, Materialized.<OrderStatusData, OrdersReport, WindowStore<Bytes, byte[]>>as("readyStats")
+                        .withValueSerde(ordersReportSerde)
+                        .withKeySerde(orderStatusDataSerde)
+                        .withRetention(Duration.ofMinutes(5L)));
 
         readyOrders.toStream().to("ordersStats");
-
     }
-
-
 }
 

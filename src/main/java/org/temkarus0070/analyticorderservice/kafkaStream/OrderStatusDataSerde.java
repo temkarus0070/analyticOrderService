@@ -16,21 +16,15 @@ public class OrderStatusDataSerde extends JsonSerde<OrderStatusData> {
         final JsonSerializer<OrderStatusData> orderStatusDataJsonSerializer = new JsonSerializer<>();
         orderStatusDataJsonSerializer.setAddTypeInfo(false);
         return orderStatusDataJsonSerializer;
-
-
     }
-
 
     @Override
     public Deserializer<OrderStatusData> deserializer() {
          JsonDeserializer<OrderStatusData> jsonDeserializer = new JsonDeserializer<>();
-
         Map<String, Object> config = new HashMap<>();
         config.put(JsonDeserializer.KEY_DEFAULT_TYPE, OrderStatusData.class);
-
         config.put(JsonDeserializer.TRUSTED_PACKAGES,"org.temkarus0070.analyticorderservice.models");
         jsonDeserializer.configure(config,true);
         return jsonDeserializer;
     }
-
 }

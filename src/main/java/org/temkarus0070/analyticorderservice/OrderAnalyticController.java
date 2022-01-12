@@ -25,8 +25,7 @@ public class OrderAnalyticController {
         this.analyticsService = analyticsService;
     }
 
-    @Operation(summary = "Get stats by orders for period from periodBegin to periodEnd, user and orderStatus"
-    )
+    @Operation(summary = "Get stats by orders for period from periodBegin to periodEnd, user and orderStatus")
     @ApiResponses(value = {@ApiResponse(responseCode = "400"
             , description = "invalid periodBegin or/and periodEnd or/and orderStatus were entered"),
             @ApiResponse(responseCode = "500", description = "problem with connect to kafka or kafka stream is not started yet")})
@@ -34,8 +33,7 @@ public class OrderAnalyticController {
             @Parameter(name = "periodEnd", description = "last date with time for stats", example = "2023-01-07T18:15:45", required = true),
             @Parameter(name = "clientId", description = "Client fullname", example = "Vasya Pupkin"),
             @Parameter(name = "orderStatus", description = "order status", examples = {@ExampleObject(value = "ALL"), @ExampleObject(value = "PENDING"),
-                    @ExampleObject(value = "PURCHASED"), @ExampleObject(value = "CANCELLED")}, required = true),
-    })
+                    @ExampleObject(value = "PURCHASED"), @ExampleObject(value = "CANCELLED")}, required = true)})
     @GetMapping(produces = "application/json")
     @ExceptionHandler(InvalidDatesAtRequestException.class)
     public OrdersReport getAnalyticsByOrders(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime periodBegin,
@@ -43,6 +41,4 @@ public class OrderAnalyticController {
                                              @RequestParam(required = false) String clientId, @RequestParam OrderStatus orderStatus) {
         return analyticsService.ordersReport(periodBegin, periodEnd, clientId, orderStatus);
     }
-
-
 }

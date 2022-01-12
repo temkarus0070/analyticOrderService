@@ -5,15 +5,10 @@ import java.io.Serializable;
 
 public class GoodDTO implements Serializable {
     private long id;
-
-
     private String name;
-
     private double price;
-
-
     private int count;
-
+    private double sum;
 
     @Override
     public String toString() {
@@ -25,8 +20,6 @@ public class GoodDTO implements Serializable {
                 ", sum=" + sum +
                 '}';
     }
-
-    private double sum;
 
     public GoodDTO(long id, String name, double price, int count, double sum) {
         this.id = id;

@@ -1,6 +1,5 @@
 package org.temkarus0070.analyticorderservice.tests;
 
-
 import org.apache.kafka.common.serialization.LongSerializer;
 import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.TimeWindowedDeserializer;
@@ -30,8 +29,7 @@ import java.util.List;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @DirtiesContext
-@EmbeddedKafka(
-        bootstrapServersProperty = "spring.kafka.bootstrap-servers", partitions = 1)
+@EmbeddedKafka(bootstrapServersProperty = "spring.kafka.bootstrap-servers", partitions = 1)
 public class KafkaTest {
     private OrdersStatsProcessor ordersStatsProcessor;
 
@@ -40,12 +38,21 @@ public class KafkaTest {
         this.ordersStatsProcessor = ordersStatsProcessor;
     }
 
+    private final Instant PERIOD_END_DATE = Instant.from(LocalDateTime.of(2022, 1, 1, 1, 1, 1)
+            .atZone(ZoneId.systemDefault()));
+    private final Instant PERIOD_BEGIN_DATE = Instant.from(LocalDateTime.of(2020, 1, 1, 0, 0)
+            .atZone(ZoneId.systemDefault()));
+    private final Instant FIRST_ORDER_DATE = LocalDateTime.of(2020, Month.JANUARY, 1, 12, 0)
+            .atZone(ZoneId.systemDefault()).toInstant();
+    private final Instant SECOND_ORDER_DATE = LocalDateTime.of(2021, Month.DECEMBER, 1, 12, 0)
+            .atZone(ZoneId.systemDefault()).toInstant();
+
     @Test
-    void test() {
+    void testCalculateOrderStats() {
         List<GoodDTO> goodDTOS = List.of(new GoodDTO(1, "soap", 5, 2, 10), new GoodDTO(2, "coke", 10, 2, 20));
-        OrderDTO orderDTO = new OrderDTO(1L, "Pupkin", goodDTOS, Status.PURCHASED);
+        OrderDTO orderDTO = new OrderDTO(1L, "Pupkin", goodDTOS, OrderStatus.PURCHASED);
         goodDTOS = List.of(new GoodDTO(1, "soap", 25, 2, 50), new GoodDTO(2, "coke", 100, 2, 200));
-        OrderDTO orderDTO1 = new OrderDTO(2L, "Pupkin", goodDTOS, Status.CANCELLED);
+        OrderDTO orderDTO1 = new OrderDTO(2L, "Pupkin", goodDTOS, OrderStatus.CANCELLED);
 
         StreamsBuilder streamsBuilder = new StreamsBuilder();
         ordersStatsProcessor.process(streamsBuilder);
@@ -53,18 +60,17 @@ public class KafkaTest {
 
         try (TopologyTestDriver topologyTestDriver = new TopologyTestDriver(topology)) {
             final TestInputTopic<Long, OrderDTO> ordersToAnalyze = topologyTestDriver.createInputTopic("ordersToAnalyze", new LongSerializer(), new JsonSerializer<>());
-            ordersToAnalyze.pipeInput(1L, orderDTO, LocalDateTime.of(2020, Month.JANUARY, 1, 12, 0).atZone(ZoneId.systemDefault()).toInstant());
-            ordersToAnalyze.pipeInput(2L, orderDTO1, LocalDateTime.of(2021, Month.DECEMBER, 1, 12, 0).atZone(ZoneId.systemDefault()).toInstant());
-            final TestOutputTopic<Windowed<OrderStatusData>, Object> ordersStats = topologyTestDriver.createOutputTopic("ordersStats", new TimeWindowedDeserializer<OrderStatusData>(), new JsonDeserializer<>());
+            ordersToAnalyze.pipeInput(1L, orderDTO, FIRST_ORDER_DATE);
+            ordersToAnalyze.pipeInput(2L, orderDTO1, SECOND_ORDER_DATE);
+            final TestOutputTopic<Windowed<OrderStatusData>, Object> ordersStats = topologyTestDriver.createOutputTopic("ordersStats", new TimeWindowedDeserializer<>(), new JsonDeserializer<>());
 
             final WindowStore<OrderStatusData, ValueAndTimestamp<OrdersReport>> timestampedWindowStore = topologyTestDriver.getTimestampedWindowStore("readyStats");
-            WindowStoreIterator<ValueAndTimestamp<OrdersReport>> windowStoreIterator = timestampedWindowStore.fetch(new OrderStatusData(OrderStatus.PURCHASED, "Pupkin"), Instant.from(LocalDateTime.of(2019, 1, 1, 0, 0).atZone(ZoneId.systemDefault())),
-                    Instant.from(LocalDateTime.of(2022, 1, 1, 1, 1, 1).atZone(ZoneId.systemDefault())));
+            WindowStoreIterator<ValueAndTimestamp<OrdersReport>> windowStoreIterator = timestampedWindowStore.fetch(new OrderStatusData(OrderStatus.PURCHASED, "Pupkin"),
+                    PERIOD_BEGIN_DATE, PERIOD_END_DATE);
             OrdersReport ordersReport = windowStoreIterator.next().value.value();
             Assertions.assertEquals(ordersReport, new OrdersReport(1, 30, 2));
             windowStoreIterator = timestampedWindowStore.fetch(new OrderStatusData(OrderStatus.ALL,
-                            "Pupkin"), Instant.from(LocalDateTime.of(2019, 1, 1, 0, 0).atZone(ZoneId.systemDefault())),
-                    Instant.from(LocalDateTime.of(2022, 1, 1, 1, 1, 1).atZone(ZoneId.systemDefault())));
+                    "Pupkin"), PERIOD_BEGIN_DATE, PERIOD_END_DATE);
             ordersReport.setSum(0);
             ordersReport.setOrdersCount(0);
             ordersReport.setRowsCount(0);
@@ -79,11 +85,11 @@ public class KafkaTest {
     }
 
     @Test
-    void timeTest() {
+    void testOrderReportCalculationByTime() {
         List<GoodDTO> goodDTOS = List.of(new GoodDTO(1, "soap", 5, 2, 10), new GoodDTO(2, "coke", 10, 2, 20));
-        OrderDTO orderDTO = new OrderDTO(1L, "Pupkin", goodDTOS, Status.PURCHASED);
+        OrderDTO orderDTO = new OrderDTO(1L, "Pupkin", goodDTOS, OrderStatus.PURCHASED);
         goodDTOS = List.of(new GoodDTO(1, "soap", 25, 2, 50), new GoodDTO(2, "coke", 100, 2, 200));
-        OrderDTO orderDTO1 = new OrderDTO(2L, "Pupkin", goodDTOS, Status.CANCELLED);
+        OrderDTO orderDTO1 = new OrderDTO(2L, "Pupkin", goodDTOS, OrderStatus.CANCELLED);
 
         StreamsBuilder streamsBuilder = new StreamsBuilder();
         ordersStatsProcessor.process(streamsBuilder);
@@ -91,14 +97,15 @@ public class KafkaTest {
 
         try (TopologyTestDriver topologyTestDriver = new TopologyTestDriver(topology)) {
             final TestInputTopic<Long, OrderDTO> ordersToAnalyze = topologyTestDriver.createInputTopic("ordersToAnalyze", new LongSerializer(), new JsonSerializer<>());
-            ordersToAnalyze.pipeInput(1L, orderDTO, LocalDateTime.of(2020, Month.JANUARY, 1, 12, 0).atZone(ZoneId.systemDefault()).toInstant());
-            ordersToAnalyze.pipeInput(2L, orderDTO1, LocalDateTime.of(2021, Month.DECEMBER, 1, 12, 0).atZone(ZoneId.systemDefault()).toInstant());
-            final TestOutputTopic<Windowed<OrderStatusData>, Object> ordersStats = topologyTestDriver.createOutputTopic("ordersStats", new TimeWindowedDeserializer<OrderStatusData>(), new JsonDeserializer<>());
+            ordersToAnalyze.pipeInput(1L, orderDTO, FIRST_ORDER_DATE);
+            ordersToAnalyze.pipeInput(2L, orderDTO1, SECOND_ORDER_DATE);
+            final TestOutputTopic<Windowed<OrderStatusData>, Object> ordersStats = topologyTestDriver.createOutputTopic("ordersStats", new TimeWindowedDeserializer<>(),
+                    new JsonDeserializer<>());
 
             final WindowStore<OrderStatusData, ValueAndTimestamp<OrdersReport>> timestampedWindowStore = topologyTestDriver.getTimestampedWindowStore("readyStats");
-            final WindowStoreIterator<ValueAndTimestamp<OrdersReport>> windowStoreIterator = timestampedWindowStore.fetch(new OrderStatusData(OrderStatus.ALL,
-                            "Pupkin"), Instant.from(LocalDateTime.of(2021, 1, 1, 0, 0).atZone(ZoneId.systemDefault())),
-                    Instant.from(LocalDateTime.of(2022, 1, 1, 1, 1, 1).atZone(ZoneId.systemDefault())));
+            final WindowStoreIterator<ValueAndTimestamp<OrdersReport>> windowStoreIterator = timestampedWindowStore.fetch(new OrderStatusData(OrderStatus.ALL, "Pupkin"),
+                    Instant.from(LocalDateTime.of(2021, 1, 1, 0, 0).atZone(ZoneId.systemDefault())),
+                    PERIOD_END_DATE);
             final OrdersReport orderReport = new OrdersReport();
             windowStoreIterator.forEachRemaining(keyval -> {
                 final OrdersReport report = keyval.value.value();
@@ -109,6 +116,4 @@ public class KafkaTest {
             Assertions.assertEquals(orderReport, new OrdersReport(1, 250, 2));
         }
     }
-
-
 }
