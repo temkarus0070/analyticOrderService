@@ -3,10 +3,7 @@ server:
 project:
   title: kafka analytic app
   description: kafka analytic app for orders
-management:
-    health:
-      binders:
-        enabled: false
+
 spring:
   kafka:
     properties:
@@ -51,3 +48,14 @@ opentracing.jaeger:
     host: ${JAEGER_HOST:localhost}
     port: 6831
   log-spans: true
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": true
