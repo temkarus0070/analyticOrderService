@@ -3,10 +3,7 @@ server:
 project:
   title: kafka analytic app
   description: kafka analytic app for orders
-management:
-    health:
-      binders:
-        enabled: false
+
 spring:
   kafka:
     properties:
@@ -17,13 +14,13 @@ spring:
             default:
               type: org.temkarus0070.analyticorderservice.models.OrderDTO
     consumer:
-      bootstrap-servers: localhost:9092
+      bootstrap-servers: ${KAFKA_SERVER:127.0.0.1:9092}
       group-id: group-id
       auto-offset-reset: latest
       key-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
     streams:
-      bootstrap-servers: localhost:9092
+      bootstrap-servers: ${KAFKA_SERVER:127.0.0.1:9092}
       properties:
         default:
           key.serde: org.apache.kafka.streams.kstream.WindowedSerdes$TimeWindowedSerde
@@ -42,5 +39,23 @@ spring:
 
       replication-factor: 1
       application-id: analytic-app
+
+
   application:
-    name:  app
+    name: analytic-app
+opentracing.jaeger:
+  udp-sender:
+    host: ${JAEGER_HOST:localhost}
+    port: 6831
+  log-spans: true
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": true
